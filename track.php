@@ -20,6 +20,7 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	$db_pass = 'password';
 	$db_name = 'database';
 	$db_tabl = 'table';
+	$db_fiel = true;
 	
 	$data = array();
 	
@@ -92,7 +93,8 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	/*
 	 Prepare collected data for inserting into the database. By using an associative array, this
 	 script is easily expandable for any data you want to collect about your email viewers.
-	 Connect to the database and dump the data into it.
+	 Email and Campaign are excluded from $data as they are the main point of this script.
+	 Connect to the database ready for inserting the data.
 	*/
 	$fields = "(`email`, `campaign`";
 	$values = "('".$email."', '".$campaign."'";
@@ -101,18 +103,21 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 		if(is_null($value)){
 			$values .= ", NULL";
 		} else {
-			$values .= ", '".$value."'";
+			if(is_bool($value)){
+				$values .= ($value == true) ? ", '1'" : ", '0'";
+			} else {
+				$values .= ", '".$value."'";
+			}
 		}
 	}
 	$fields .= ")";
 	$values .= ")";
-
-	/*
-	 Connect to the database, check if the table exists, create it with default settings if not, then
-	 insert the data.
-	*/
 	$db = mysql_connect($db_addr, $db_user, $db_pass);
 	mysql_select_db($db_name, $db);
+	
+	/*
+	 Check if the table exists. If it doesn't, create it with default fields.
+	*/
 	$table_exists = mysql_query("SELECT COUNT(*) FROM `information_schema`.`tables` WHERE `table_schema`='".$db_name."' AND `table_name`='".$db_tabl."';", $db);
 	$table_exists = mysql_fetch_array($table_exists);
 	if($table_exists[0] < 1){
@@ -131,6 +136,48 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 			AUTO_INCREMENT=0;"
 		);
 	}
+
+	/*
+	 Loop through all fields in the table, check against keys in $data. If an entry in $data doesn't
+	 have a matching field, attempt to create it based on the type and size of $data's value;
+	*/
+	$field_exists = mysql_query("SHOW COLUMNS FROM `".$db_tabl."`;", $db);
+	$found = array();
+	while($row = mysql_fetch_assoc($field_exists)){
+		$found[] = $row['Field'];
+	}
+	$diff = array_diff(array_keys($data), $found);
+	if(isset($_GET['test'])){
+		echo "<pre>" . print_r($data, true) . "</pre>";
+		echo "<pre>" . print_r($found, true) . "</pre>";
+		echo "<pre>" . print_r($diff, true) . "</pre>";
+	}
+	if(count($diff) > 0){
+		foreach ($diff as $key => $value) {
+			$type = gettype($data[$value]);
+			$length = strlen($data[$value]);
+			switch (strtolower($type)) {
+				case 'string':
+				case 'double':
+					$field = "VARCHAR(".((int)$length*2).") NULL DEFAULT NULL";
+					break;
+				case 'boolean':
+					$field = "ENUM('0','1') NOT NULL DEFAULT '0'";
+					break;
+				case 'integer':
+					$field = "INT(".((int)$length*2).") NULL DEFAULT NULL";
+					break;
+				case 'null':
+					$field = "VARCHAR(50) NULL DEFAULT NULL";
+					break;
+			}
+			mysql_query("ALTER TABLE `".$db_tabl."` ADD `".$value."` ".$field." COLLATE 'latin1_general_ci';", $db);
+		}
+	}
+
+	/*
+	 Finally, once all data is gathered and the table is prepared, insert the data.
+	*/
 	$response = mysql_query("INSERT INTO `".$db_tabl."` ".$fields." VALUES ".$values.";", $db);
 	if(isset($_GET['test'])){
 		echo "<pre>" . print_r($agent, true) . "</pre>";
