@@ -32,7 +32,9 @@ Once you've made sure its working, empty the database table and reset the `AUTO_
 
 If you want to track more information than this script collects by default, simply add code to collect the extra information you want and store it in the `$data` array in the format `$data[<field_name>] = <value_to_store>`. The script will automatically add it to the `INSERT` query.
 
-You will need to ensure that any extra fields you wish to use are created in the table *before* you try to use them in the script. I have not yet implemented a fallback for non-existent fields. This can either be done manually, or by editing the `CREATE` query at the bottom of `track.php` and running the script.
+The script checks `$data` for fieldnames not in the table. If it finds any, it uses the values from `$data` to try and guess the field type and size, then creates new fields. This behaviour can be reveresed by changing `$db_fiel` near the top of the script to `false` - this will cause any erroneous fieldnames and their values to be removed from `$data` before the final `INSERT` query is generated.
+
+**WARNING:** the code to dynamically create new fields should be fine as it gives a size margin of twice the input value, but it is certainly better to create the fields properly to your needs either directly in the database or in the `CREATE` query in this script.
 
 ##Debugging##
 
@@ -40,5 +42,4 @@ If the script doesn't seem to be working, open the script directly in your brows
 
 ##To Do##
 
-* Add a check for the existence of table fields before attempting the `INSERT` query
-  * Provide a fallback (such as removing that data from the `INSERT`) or possibly create the field?
+* Enhance new field generation to be as reliable as possible
