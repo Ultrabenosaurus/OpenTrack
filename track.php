@@ -17,6 +17,8 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	$db_name = 'database';
 	$db_tabl = 'table';
 	
+	$data = array();
+	
 	/*
 	 Attempt to use PHP's built-in browscap detection method to get information on the user's device
 	 and client. However, not all hosts support browscap, and those that do may be using an outdated
@@ -33,13 +35,15 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 		foreach ($agent as $key => $value) {
 			switch ($key) {
 				case 'comment':
-					$client = ($value == "Default Browser") ? NULL : ", '".$value."'";
+					$data['client'] = ($value == "Default Browser") ? NULL : $value;
 					break;
 				case 'platform':
-					$platform = ($value == "unknown") ? NULL : ", '".$value."'";
+					$temp = (isset($data['platform']) && is_null($data['platform'])) ? NULL : $data['platform'];
+					$data['platform'] = ($value == "unknown") ? $temp : $value;
 					break;
 				case 'platform_description':
-					$platform = ($value == "unknown") ? NULL : ", '".$value."'";
+					$temp = (isset($data['platform']) && is_null($data['platform'])) ? NULL : $data['platform'];
+					$data['platform'] = ($value == "unknown") ? $temp : $value;
 					break;
 			}
 		}
@@ -54,22 +58,22 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 				$bc = new Browscap('phpbc_cache');
 				$browser = $bc->getBrowser();
 				if(isset($browser->Comment)){
-					$client = ($browser->Comment == "Default Browser") ? NULL : ", '".$browser->Comment."'";
+					$temp = (isset($data['client']) && is_null($data['client'])) ? NULL : $data['client'];
+					$data['client'] = ($browser->Comment == "Default Browser") ? $temp : $browser->Comment;
 				}
 				if(isset($browser->Parent)){
-					$client = ($browser->Parent == "Default Browser") ? NULL : ", '".$browser->Parent."'";
+					$temp = (isset($data['client']) && is_null($data['client'])) ? NULL : $data['client'];
+					$data['client'] = ($browser->Parent == "Default Browser") ? $temp : $browser->Parent;
 				}
 				if(isset($browser->Platform)){
-					$platform = ($browser->Platform == "Default Browser") ? NULL : ", '".$browser->Platform."'";
+					$data['platform'] = ($browser->Platform == "Default Browser") ? NULL : $browser->Platform;
 				}
-				$agent = "phpbc";
 				$skip = true;
 			} catch(Browscap_Exception $e){
 				$log = fopen('log', 'a');
 				fwrite($log, date('Y/m/d - H:i:s')." >> \r\n");
 				fwrite($log, ">>\t".$e->getMessage()."\r\n");
 				$trace = $e->getTrace();
-				// fwrite($log, print_r($trace, true));
 				fwrite($log, ">>\t".$trace[0]['file'].":".$trace[0]['line']."\r\n\r\n");
 				fclose($log);
 			}
@@ -77,28 +81,31 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 		if(file_exists('categorizr.php') && !isset($skip)){
 			@include("categorizr.php");
 			$device = categorizr();
-			$platform = ", '".$device."'";
-			$agent = "categorizr";
+			$data['platform'] = $device;
 		}
 	}
 
 	/*
-	 Connect to the database (switch the user/pass info above depending on whether you're testing
-	 or live) and dump the data into the database.
-	 If you add/change any browser detection methods set $agent to a unique string for all except
-	 browscap so that it will always be the default.
+	 Prepare collected data for inserting into the database. By using an associative array, this
+	 script is easily expandable for any data you want to collect about your email viewers.
+	 Connect to the database and dump the data into it.
 	*/
+	$fields = "(`email`, `campaign`";
+	$values = "('".$email."', '".$campaign."'";
+	foreach ($data as $key => $value) {
+		$fields .= ", `".$key."`";
+		if(is_null($value)){
+			$values .= ", NULL";
+		} else {
+			$values .= ", '".$value."'";
+		}
+	}
+	$fields .= ")";
+	$values .= ")";
+
 	$db = mysql_connect($db_addr, $db_user, $db_pass);
 	mysql_select_db($db_name, $db);
-	if(isset($agent)){
-		if($agent == 'categorizr'){
-			$results = mysql_query("INSERT INTO `".$db_tabl."` (`email`, `campaign`, `platform`) VALUES ('".$email."', '".$campaign."'".$platform.");");
-		} else {
-			$results = mysql_query("INSERT INTO `".$db_tabl."` (`email`, `campaign`, `client`, `platform`) VALUES ('".$email."', '".$campaign."'".$client.$platform.");");
-		}
-	} else {
-		$results = mysql_query("INSERT INTO `".$db_tabl."` (`email`, `campaign`) VALUES ('".$email."', '".$campaign."');");
-	}
+	$results = mysql_query("INSERT INTO `".$db_tabl."` ".$fields." VALUES ".$values.";", $db);
 }
 
 ?>

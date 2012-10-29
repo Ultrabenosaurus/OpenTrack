@@ -1,4 +1,5 @@
-log/
+log
+phpbc_cache/
 
 #################
 ## Eclipse
