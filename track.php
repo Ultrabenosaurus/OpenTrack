@@ -10,12 +10,13 @@ echo file_get_contents('img.png');
 if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['email']) && !empty($_GET['email']))){
 	$email = $_GET['email'];
 	$campaign = $_GET['campaign'];
+	
 	$db_addr = 'localhost';
 	$db_user = 'username';
 	$db_pass = 'password';
 	$db_name = 'database';
 	$db_tabl = 'table';
-
+	
 	/*
 	 Attempt to use PHP's built-in browscap detection method to get information on the user's device
 	 and client. However, not all hosts support browscap, and those that do may be using an outdated
@@ -44,24 +45,34 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 		}
 	} else {
 		if(file_exists('Browscap.php')){
-			$cache_dir = 'phpbc_cache';
-			if(!is_dir($cache_dir)){
-				mkdir($cache_dir);
+			try{
+				$cache_dir = 'phpbc_cache';
+				if(!is_dir($cache_dir)){
+					mkdir($cache_dir);
+				}
+				@include 'Browscap.php';
+				$bc = new Browscap('phpbc_cache');
+				$browser = $bc->getBrowser();
+				if(isset($browser->Comment)){
+					$client = ($browser->Comment == "Default Browser") ? NULL : ", '".$browser->Comment."'";
+				}
+				if(isset($browser->Parent)){
+					$client = ($browser->Parent == "Default Browser") ? NULL : ", '".$browser->Parent."'";
+				}
+				if(isset($browser->Platform)){
+					$platform = ($browser->Platform == "Default Browser") ? NULL : ", '".$browser->Platform."'";
+				}
+				$agent = "phpbc";
+				$skip = true;
+			} catch(Browscap_Exception $e){
+				$log = fopen('log', 'a');
+				fwrite($log, date('Y/m/d - H:i:s')." >> \r\n");
+				fwrite($log, ">>\t".$e->getMessage()."\r\n");
+				$trace = $e->getTrace();
+				// fwrite($log, print_r($trace, true));
+				fwrite($log, ">>\t".$trace[0]['file'].":".$trace[0]['line']."\r\n\r\n");
+				fclose($log);
 			}
-			@include 'Browscap.php';
-			$bc = new Browscap('phpbc_cache');
-			$browser = $bc->getBrowser();
-			if(isset($browser->Comment)){
-				$client = ($browser->Comment == "Default Browser") ? NULL : ", '".$browser->Comment."'";
-			}
-			if(isset($browser->Parent)){
-				$client = ($browser->Parent == "Default Browser") ? NULL : ", '".$browser->Parent."'";
-			}
-			if(isset($browser->Platform)){
-				$platform = ($browser->Platform == "Default Browser") ? NULL : ", '".$browser->Platform."'";
-			}
-			$agent = "phpbc";
-			$skip = true;
 		}
 		if(file_exists('categorizr.php') && !isset($skip)){
 			@include("categorizr.php");
