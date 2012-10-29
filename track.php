@@ -3,9 +3,12 @@
 /*
  Return the image by default so that, even if the script fails, the user isn't aware that
  anything has gone wrong (broken image symbol).
+ Override this in testing mode.
 */
-header("Content-Type: image/png");
-echo file_get_contents('lib/img.png');
+if(!isset($_GET['test'])){
+	header("Content-Type: image/png");
+	echo file_get_contents('lib/img.png');
+}
 
 if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['email']) && !empty($_GET['email']))){
 	error_reporting(~E_NOTICE);
@@ -57,17 +60,17 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 				}
 				@include 'lib/Browscap.php';
 				$bc = new Browscap('lib/phpbc_cache');
-				$browser = $bc->getBrowser();
-				if(isset($browser->Comment)){
+				$agent = $bc->getBrowser();
+				if(isset($agent->Comment)){
 					$temp = (isset($data['client']) && is_null($data['client'])) ? NULL : $data['client'];
-					$data['client'] = ($browser->Comment == "Default Browser") ? $temp : $browser->Comment;
+					$data['client'] = ($agent->Comment == "Default Browser") ? $temp : $agent->Comment;
 				}
-				if(isset($browser->Parent)){
+				if(isset($agent->Parent)){
 					$temp = (isset($data['client']) && is_null($data['client'])) ? NULL : $data['client'];
-					$data['client'] = ($browser->Parent == "Default Browser") ? $temp : $browser->Parent;
+					$data['client'] = ($agent->Parent == "Default Browser") ? $temp : $agent->Parent;
 				}
-				if(isset($browser->Platform)){
-					$data['platform'] = ($browser->Platform == "Default Browser") ? NULL : $browser->Platform;
+				if(isset($agent->Platform)){
+					$data['platform'] = ($agent->Platform == "Default Browser") ? NULL : $agent->Platform;
 				}
 				$skip = true;
 			} catch(Browscap_Exception $e){
@@ -81,8 +84,8 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 		}
 		if(file_exists('lib/categorizr.php') && !isset($skip)){
 			@include("lib/categorizr.php");
-			$device = categorizr();
-			$data['platform'] = $device;
+			$agent = categorizr();
+			$data['platform'] = $agent;
 		}
 	}
 
@@ -128,7 +131,13 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 			AUTO_INCREMENT=0;"
 		);
 	}
-	$results = mysql_query("INSERT INTO `".$db_tabl."` ".$fields." VALUES ".$values.";", $db);
+	$response = mysql_query("INSERT INTO `".$db_tabl."` ".$fields." VALUES ".$values.";", $db);
+	if(isset($_GET['test'])){
+		echo "<pre>" . print_r($agent, true) . "</pre>";
+		echo "<pre>" . print_r($fields, true) . "</pre>";
+		echo "<pre>" . print_r($values, true) . "</pre>";
+		echo "<pre>" . print_r($response, true) . "</pre>";
+	}
 }
 
 ?>
