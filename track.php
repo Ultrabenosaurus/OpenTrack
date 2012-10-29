@@ -96,22 +96,6 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	 Email and Campaign are excluded from $data as they are the main point of this script.
 	 Connect to the database ready for inserting the data.
 	*/
-	$fields = "(`email`, `campaign`";
-	$values = "('".$email."', '".$campaign."'";
-	foreach ($data as $key => $value) {
-		$fields .= ", `".$key."`";
-		if(is_null($value)){
-			$values .= ", NULL";
-		} else {
-			if(is_bool($value)){
-				$values .= ($value == true) ? ", '1'" : ", '0'";
-			} else {
-				$values .= ", '".$value."'";
-			}
-		}
-	}
-	$fields .= ")";
-	$values .= ")";
 	$db = mysql_connect($db_addr, $db_user, $db_pass);
 	mysql_select_db($db_name, $db);
 	
@@ -153,31 +137,51 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 		echo "<pre>" . print_r($diff, true) . "</pre>";
 	}
 	if(count($diff) > 0){
-		foreach ($diff as $key => $value) {
-			$type = gettype($data[$value]);
-			$length = strlen($data[$value]);
-			switch (strtolower($type)) {
-				case 'string':
-				case 'double':
-					$field = "VARCHAR(".((int)$length*2).") NULL DEFAULT NULL";
-					break;
-				case 'boolean':
-					$field = "ENUM('0','1') NOT NULL DEFAULT '0'";
-					break;
-				case 'integer':
-					$field = "INT(".((int)$length*2).") NULL DEFAULT NULL";
-					break;
-				case 'null':
-					$field = "VARCHAR(50) NULL DEFAULT NULL";
-					break;
+		foreach ($diff as $key => $value){
+			if($db_fiel === true){
+				$type = gettype($data[$value]);
+				$length = strlen($data[$value]);
+				switch (strtolower($type)) {
+					case 'string':
+					case 'double':
+						$field = "VARCHAR(".((int)$length*2).") NULL DEFAULT NULL";
+						break;
+					case 'boolean':
+						$field = "ENUM('0','1') NOT NULL DEFAULT '0'";
+						break;
+					case 'integer':
+						$field = "INT(".((int)$length*2).") NULL DEFAULT NULL";
+						break;
+					case 'null':
+						$field = "VARCHAR(50) NULL DEFAULT NULL";
+						break;
+				}
+				mysql_query("ALTER TABLE `".$db_tabl."` ADD `".$value."` ".$field." COLLATE 'latin1_general_ci';", $db);
+			} else {
+				array_splice($data, array_search($value, array_keys($data)), 1);
 			}
-			mysql_query("ALTER TABLE `".$db_tabl."` ADD `".$value."` ".$field." COLLATE 'latin1_general_ci';", $db);
 		}
 	}
 
 	/*
-	 Finally, once all data is gathered and the table is prepared, insert the data.
+	 Finally, once the table is prepared, gather the data and insert it.
 	*/
+	 $fields = "(`email`, `campaign`";
+	$values = "('".$email."', '".$campaign."'";
+	foreach ($data as $key => $value) {
+		$fields .= ", `".$key."`";
+		if(is_null($value)){
+			$values .= ", NULL";
+		} else {
+			if(is_bool($value)){
+				$values .= ($value == true) ? ", '1'" : ", '0'";
+			} else {
+				$values .= ", '".$value."'";
+			}
+		}
+	}
+	$fields .= ")";
+	$values .= ")";
 	$response = mysql_query("INSERT INTO `".$db_tabl."` ".$fields." VALUES ".$values.";", $db);
 	if(isset($_GET['test'])){
 		echo "<pre>" . print_r($agent, true) . "</pre>";
