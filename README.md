@@ -19,7 +19,7 @@ Designed to be used with messages sent via custom auto-mailing scripts.
 
 Edit the `$db_*` variables near the top of `track.php` to match your database settings. Don't worry if the table you intend to use doesn't exist yet, the script will create a table using default settings if it can't find one matching the name you provide.
 
-Upload `track.php` and the entire `lib/` directory to your server - the location doesn't matter so long as the relative paths between files is maintained.
+Upload `track.php` and the entire `lib/` directory to your server - the location doesn't matter so long as the relative paths between files are maintained.
 
 Test the script by either:
 
