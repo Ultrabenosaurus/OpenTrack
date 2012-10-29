@@ -103,8 +103,30 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	$fields .= ")";
 	$values .= ")";
 
+	
 	$db = mysql_connect($db_addr, $db_user, $db_pass);
 	mysql_select_db($db_name, $db);
+	/*
+	 Check if the table exists, create it with default settings if not.
+	*/
+	$table_exists = mysql_query("SELECT COUNT(*) FROM `information_schema`.`tables` WHERE `table_schema`='".$db_name."' AND `table_name`='".$db_tabl."';", $db);
+	$table_exists = mysql_fetch_array($table_exists);
+	if($table_exists[0] < 1){
+		mysql_query(
+			"CREATE TABLE IF NOT EXIST `".$db_tabl."` (
+				`ID` INT(10) NOT NULL AUTO_INCREMENT,
+				`email` VARCHAR(50) NOT NULL,
+				`campaign` VARCHAR(50) NOT NULL,
+				`datetime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				`client` VARCHAR(50) NULL DEFAULT NULL,
+				`platform` VARCHAR(50) NULL DEFAULT NULL,
+				PRIMARY KEY (`ID`)
+			)
+			COLLATE='latin1_swedish_ci'
+			ENGINE=InnoDB
+			AUTO_INCREMENT=0;"
+		);
+	}
 	$results = mysql_query("INSERT INTO `".$db_tabl."` ".$fields." VALUES ".$values.";", $db);
 }
 
