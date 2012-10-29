@@ -5,9 +5,10 @@
  anything has gone wrong (broken image symbol).
 */
 header("Content-Type: image/png");
-echo file_get_contents('img.png');
+echo file_get_contents('lib/img.png');
 
 if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['email']) && !empty($_GET['email']))){
+	error_reporting(~E_NOTICE);
 	$email = $_GET['email'];
 	$campaign = $_GET['campaign'];
 	
@@ -48,14 +49,14 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 			}
 		}
 	} else {
-		if(file_exists('Browscap.php')){
+		if(file_exists('lib/Browscap.php')){
 			try{
-				$cache_dir = 'phpbc_cache';
+				$cache_dir = 'lib/phpbc_cache';
 				if(!is_dir($cache_dir)){
-					mkdir($cache_dir);
+					mkdir($cache_dir, true);
 				}
-				@include 'Browscap.php';
-				$bc = new Browscap('phpbc_cache');
+				@include 'lib/Browscap.php';
+				$bc = new Browscap('lib/phpbc_cache');
 				$browser = $bc->getBrowser();
 				if(isset($browser->Comment)){
 					$temp = (isset($data['client']) && is_null($data['client'])) ? NULL : $data['client'];
@@ -78,8 +79,8 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 				fclose($log);
 			}
 		}
-		if(file_exists('categorizr.php') && !isset($skip)){
-			@include("categorizr.php");
+		if(file_exists('lib/categorizr.php') && !isset($skip)){
+			@include("lib/categorizr.php");
 			$device = categorizr();
 			$data['platform'] = $device;
 		}
@@ -103,12 +104,12 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	$fields .= ")";
 	$values .= ")";
 
-	
+	/*
+	 Connect to the database, check if the table exists, create it with default settings if not, then
+	 insert the data.
+	*/
 	$db = mysql_connect($db_addr, $db_user, $db_pass);
 	mysql_select_db($db_name, $db);
-	/*
-	 Check if the table exists, create it with default settings if not.
-	*/
 	$table_exists = mysql_query("SELECT COUNT(*) FROM `information_schema`.`tables` WHERE `table_schema`='".$db_name."' AND `table_name`='".$db_tabl."';", $db);
 	$table_exists = mysql_fetch_array($table_exists);
 	if($table_exists[0] < 1){
