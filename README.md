@@ -6,11 +6,7 @@ Designed to be used with messages sent via custom auto-mailing scripts.
 
 ##Versions##
 
-Stable and completely working non-class-based version available in the [V1.0 branch](https://github.com/Ultrabenosaurus/OpenTrack/tree/V1.0).
-
-Stable but not finished class-based version available in the [Master branch](https://github.com/Ultrabenosaurus/OpenTrack/).
-
-Unstable version available in the [Dev branch](https://github.com/Ultrabenosaurus/OpenTrack/tree/dev).
+This is the unstable development version. It is not recommended to use this version for anything other than testing and your own development. If you want to use this script, please look at either the [Master](https://github.com/Ultrabenosaurus/OpenTrack/) (stable class-based) or [V1.0](https://github.com/Ultrabenosaurus/OpenTrack/tree/V1.0) (stable, non-class-based) branches.
 
 ##Requirements##
 
