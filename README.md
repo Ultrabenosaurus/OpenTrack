@@ -4,6 +4,14 @@ A simple script to help you track who opens your emails.
 
 Designed to be used with messages sent via custom auto-mailing scripts.
 
+##Versions##
+
+Stable and completely working non-class-based version available in the [V1.0 branch](https://github.com/Ultrabenosaurus/OpenTrack/tree/V1.0).
+
+Stable but not finished class-based version available in the [Master branch](https://github.com/Ultrabenosaurus/OpenTrack/).
+
+Unstable version available in the [Dev branch](https://github.com/Ultrabenosaurus/OpenTrack/tree/dev).
+
 ##Requirements##
 
 * [browscap.ini](http://php.net/manual/en/function.get-browser.php) and/or [PHPBrowscap](https://github.com/GaretJax/phpbrowscap) and/or [Categorizr](https://github.com/bjankord/Categorizr) - unless you don't mind about device detection
@@ -43,4 +51,4 @@ If the script doesn't seem to be working, open the script directly in your brows
 ##To Do##
 
 * Enhance new field generation to be as reliable as possible
-* Convert main code to class, make track.php an interface?
+* Finish implementing the error log system
