@@ -6,7 +6,7 @@ Designed to be used with messages sent via custom auto-mailing scripts.
 
 ##Requirements##
 
-* [browscap.ini](http://php.net/manual/en/function.get-browser.php) OR [PHPBrowscap](https://github.com/GaretJax/phpbrowscap) OR [Categorizr](https://github.com/bjankord/Categorizr) - unless you don't mind about device detection
+* [browscap.ini](http://php.net/manual/en/function.get-browser.php) and/or [PHPBrowscap](https://github.com/GaretJax/phpbrowscap) and/or [Categorizr](https://github.com/bjankord/Categorizr) - unless you don't mind about device detection
   * Confirmed compatible versions of both PHPBrowscap and Categorizr are included in the `lib/` directory. I haven't modified either file.
 * browscap.ini may require you to be able to edit your php.ini file, directly or indirectly doesn't matter
 *  PHPBrowscap requires PHP >= 5.3
