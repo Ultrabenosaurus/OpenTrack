@@ -48,6 +48,9 @@ class OpenTrack{
 	}
 	
 	public function dbConnect($_db_addr, $_db_user, $_db_pass, $_db_name = null, $_db_tabl = null){
+		if(!is_null($this->db)){
+			$this->dbDisconnect(true);
+		}
 		$this->db_addr = $_db_addr;
 		$this->db_user = $_db_user;
 		$this->db_pass = $_db_pass;
@@ -70,12 +73,23 @@ class OpenTrack{
 		if(is_resource($conn)){
 			$this->db = $conn;
 			if(!is_null($_db_name)){
-				$this->dbSwitch($_db_name);
+				if($this->dbSwitch($_db_name)){
+					return true;
+				} else {
+					return false;
+				}
 			}
+			return true;
+		} else {
+			return false;
 		}
 	}
 	
-	public function dbDisconnect(){
+	public function dbDisconnect($force = false){
+		if($force){
+			$this->db = null;
+			return true;
+		}
 		if(!is_null($this->db)){
 			$count = 0;
 			$close = mysql_close($this->db);
@@ -89,6 +103,12 @@ class OpenTrack{
 					break;
 				}
 				$count++;
+			}
+			if($close){
+				$this->db = null;
+				return true;
+			} else {
+				return false;
 			}
 		}
 	}
@@ -111,6 +131,9 @@ class OpenTrack{
 		}
 		if($active){
 			$this->db_name = $_db_name;
+			return true;
+		} else {
+			return false;
 		}
 	}
 	
