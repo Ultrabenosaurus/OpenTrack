@@ -12,8 +12,8 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	$campaign = $_GET['campaign'];
 
 	/*
-	 HostEurope currently doesn't have PHP set to use browscap, but I wrote some code to take
-	 advantage of it in case that fact changes, as browscap is a very powerful detection method
+	 some hosts don't have PHP set to use browscap, but I wrote some code to take advantage
+	 of it in case that fact changes, as browscap is a very powerful detection method
 	*/
 	$browscap = ini_get('browscap');
 	if(!empty($browscap) && !is_null($browscap) && $browscap !== false){
@@ -47,8 +47,7 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	}
 
 	/*
-	 Connect to the database (switch the $db line depending on whether you're testing or live) and
-	 dump the data into the database.
+	 Connect to the database and dump the data into the database.
 	 If you add/change any browser detection methods set $agent to a unique string for all except
 	 browscap so that it will always be the default.
 	*/
