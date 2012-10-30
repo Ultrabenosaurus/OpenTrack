@@ -7,7 +7,7 @@
 header("Content-Type: image/png");
 echo file_get_contents('img.png');
 
-if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['email']) && !empty($_GET['email'])) && $_GET['email'] != "$%cust_email%$"){
+if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['email']) && !empty($_GET['email']))){
 	$email = $_GET['email'];
 	$campaign = $_GET['campaign'];
 
@@ -52,9 +52,8 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	 If you add/change any browser detection methods set $agent to a unique string for all except
 	 browscap so that it will always be the default.
 	*/
-	$db = mysql_connect("localhost", "dbu1025481", "fusiondb4u");
-	// $db = mysql_connect("localhost", "root", "");
-	mysql_select_db("db1025481-fusion", $db);
+	$db = mysql_connect("localhost", "username", "password");
+	mysql_select_db("database", $db);
 	if(isset($agent)){
 		if($agent == 'categorizr'){
 			$results = mysql_query("INSERT INTO `email_tracking` (`email`, `campaign`, `platform`) VALUES ('".$email."', '".$campaign."'".$platform.");");
