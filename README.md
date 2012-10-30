@@ -43,4 +43,4 @@ If the script doesn't seem to be working, open the script directly in your brows
 ##To Do##
 
 * Enhance new field generation to be as reliable as possible
-* Convert main code to close, make track.php an interface?
+* Convert main code to class, make track.php an interface?
