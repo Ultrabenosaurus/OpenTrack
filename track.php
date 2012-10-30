@@ -12,7 +12,7 @@ if((isset($_GET['campaign']) && !empty($_GET['campaign'])) && (isset($_GET['emai
 	$campaign = $_GET['campaign'];
 
 	/*
-	 some hosts don't have PHP set to use browscap, but I wrote some code to take advantage
+	 Some hosts don't have PHP set to use browscap, but I wrote some code to take advantage
 	 of it in case that fact changes, as browscap is a very powerful detection method
 	*/
 	$browscap = ini_get('browscap');
