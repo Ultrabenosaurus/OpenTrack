@@ -4,6 +4,10 @@ A simple script to help you track who opens your emails.
 
 Designed to be used with messages sent via custom auto-mailing scripts.
 
+##Versions##
+
+This is the original version of OpenTrack. This is not class-based and is (hopefully) the most awkward version to maintain and expand upon. However, it is perfectly stable and works very well so it is fine for use in small projects where minimal changes will be made to the data collected by the script.
+
 ##Requirements##
 
 * [browscap.ini](http://php.net/manual/en/function.get-browser.php) and/or [PHPBrowscap](https://github.com/GaretJax/phpbrowscap) and/or [Categorizr](https://github.com/bjankord/Categorizr) - unless you don't mind about device detection
@@ -39,8 +43,3 @@ The script checks `$data` for fieldnames not in the table. If it finds any, it u
 ##Debugging##
 
 If the script doesn't seem to be working, open the script directly in your browser and add `&test` to the end of the query string. This will prevent the 1x1 pixel image from being displayed and will instead print out the device `$agent`, the fields `$fields` and data `$values` to be inserted, and the result `$response` of the insert.
-
-##To Do##
-
-* Enhance new field generation to be as reliable as possible
-* Convert main code to class, make track.php an interface?
