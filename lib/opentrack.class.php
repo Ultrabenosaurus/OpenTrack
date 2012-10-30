@@ -59,7 +59,7 @@ class OpenTrack{
 				$conn = mysql_connect($this->db_addr, $this->db_user, $this->db_pass);
 				if($count >= 10){
 					$info = date('H:i:s')." - OpenTrack::dbConnect() >> \r\n";
-					$info .= ">>\tDatabase connection could not be established properly.";
+					$info .= ">>\tDatabase connection could not be established properly.\r\n";
 					$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
 					$this->_log($info);
 					break;
@@ -83,7 +83,7 @@ class OpenTrack{
 				$close = mysql_close($this->db);
 				if($count >= 10){
 					$info = date('H:i:s')." - OpenTrack::dbDisconnect() >> \r\n";
-					$info .= ">>\tDatabase connection could not be terminated properly.";
+					$info .= ">>\tDatabase connection could not be terminated properly.\r\n";
 					$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
 					$this->_log($info);
 					break;
@@ -101,7 +101,7 @@ class OpenTrack{
 				$active = mysql_select_db($this->db_name, $this->db);
 				if($count >= 10){
 					$info = date('H:i:s')." - OpenTrack::dbSwitch() >> \r\n";
-					$info .= ">>\tCould not set database '".$this->db."' as the active database. Please ensure it exists and you have permission to access it.";
+					$info .= ">>\tCould not set database '".$this->db."' as the active database. Please ensure it exists and you have permission to access it.\r\n";
 					$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
 					$this->_log($info);
 					break;
@@ -290,7 +290,7 @@ class OpenTrack{
 					);
 					if($count >= 10){
 						$info = date('H:i:s')." - OpenTrack::_createTable() >> \r\n";
-						$info .= ">>\tTable '' did not exist and could not be created. This is probably either a connection or permissions error.";
+						$info .= ">>\tTable '' did not exist and could not be created. This is probably either a connection or permissions error.\r\n";
 						$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
 						$this->_log($info);
 						break;
@@ -343,7 +343,7 @@ class OpenTrack{
 							$info .= ">>\tCould not add field '".$value."' to table '".$this->db_tabl."'. Please ensure it exists and you have permission to access it.\r\n";
 							$info .= ">>\tValue: ".$this->data[$value]."\r\n";
 							$info .= ">>\tType: ".strtolower($type)."\r\n";
-							$info .= ">>\tLength: ".$length;
+							$info .= ">>\tLength: ".$length."\r\n";
 							$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
 							$this->_log($info);
 							break;
