@@ -1,6 +1,7 @@
 <?php
 
 class OpenTrack{
+	private $errors;
 	private $dirs;
 	private $debug;
 	private $device;
@@ -16,6 +17,7 @@ class OpenTrack{
 	private $test;
 
 	public function __construct($_debug = false, $_device = true, $_cache_dir = 'phpbc_cache/', $_db_fiel = false){
+		$this->errors = 0;
 		if(!$_debug){
 			set_error_handler(array($this, "_handleErrors"));
 		}
@@ -38,6 +40,7 @@ class OpenTrack{
 	
 	public function __destruct(){
 		$this->dbDisconnect();
+		$this->errors = null;
 		$this->dirs = null;
 		$this->debug = null;
 		$this->device = null;
@@ -61,6 +64,7 @@ class OpenTrack{
 			$this->dirs['logs_organise'] = true;
 			$this->dirs['logs'] = 'logs/'.date('Y').'/'.date('m').'/';
 		}
+		$this->test['dirs'] = $this->dirs;
 	}
 	
 	public function dbConnect($_db_addr, $_db_user, $_db_pass, $_db_name = null, $_db_tabl = null){
@@ -90,6 +94,9 @@ class OpenTrack{
 			$this->db = $conn;
 			if(!is_null($_db_name)){
 				if($this->dbSwitch($_db_name)){
+					$this->test['db_info']['address'] = $this->db_addr;
+					$this->test['db_info']['username'] = $this->db_user;
+					$this->test['db_info']['password'] = $this->db_pass;
 					return true;
 				} else {
 					return false;
@@ -147,6 +154,7 @@ class OpenTrack{
 		}
 		if($active){
 			$this->db_name = $_db_name;
+			$this->test['db_info']['database'] = $this->db_name;
 			return true;
 		} else {
 			return false;
@@ -192,70 +200,33 @@ class OpenTrack{
 	}
 	
 	private function _getDeviceInfo(){
-		$browscap = isset($_GET['browscap']) ? $_GET['browscap'] : ini_get('browscap');
-		if(!empty($browscap) && !is_null($browscap) && $browscap !== false){
-			$agent = get_browser($_SERVER['HTTP_USER_AGENT'], true);
-			foreach ($agent as $key => $value) {
-				switch ($key) {
-					case 'comment':
-						$this->data['client'] = ($value == "Default Browser") ? NULL : $value;
-						break;
-					case 'platform':
-						$temp = (isset($this->data['platform']) && is_null($this->data['platform'])) ? NULL : $this->data['platform'];
-						$this->data['platform'] = ($value == "unknown") ? $temp : $value;
-						break;
-					case 'platform_description':
-						$temp = (isset($this->data['platform']) && is_null($this->data['platform'])) ? NULL : $this->data['platform'];
-						$this->data['platform'] = ($value == "unknown") ? $temp : $value;
-						break;
+		$method = isset($_GET['device']) ? $_GET['device'] : ini_get('browscap');
+		switch($method){
+			case 'browscapini':
+				$agent = $this->_browscapini();
+				break;
+			case 'phpbrowscap':
+				$agent = $this->_phpbrowscap();
+				break;
+			case 'categorizr':
+				$agent = $this->_categorizer();
+				break;
+			default:
+				if(!empty($method) && !is_null($method)){
+					$agent = $this->_browscapini();
+				} else {
+					if(!isset($agent) && file_exists($this->dirs['browscap'])){
+						$agent = $this->_phpbrowscap();
+					}
+					if(!isset($agent) && file_exists($this->dirs['categorizr'])){
+						$agent = $this->_categorizer();
+					}
 				}
-			}
-		} else {
-			if(file_exists($this->dirs['browscap'])){
-				try{
-					if(!is_dir($this->dirs['cache'])){
-						mkdir($this->dirs['cache'], 0777, true);
-					}
-					@include $this->dirs['browscap'];
-					$bc = new Browscap($this->dirs['cache']);
-					$agent = $bc->getBrowser();
-					if(isset($agent)){
-						$skip = true;
-					}
-					if(isset($agent->Comment)){
-						$temp = (isset($this->data['client']) && is_null($this->data['client'])) ? NULL : $this->data['client'];
-						$this->data['client'] = ($agent->Comment == "Default Browser") ? $temp : $agent->Comment;
-					}
-					if(isset($agent->Parent)){
-						$temp = (isset($this->data['client']) && is_null($this->data['client'])) ? NULL : $this->data['client'];
-						$this->data['client'] = ($agent->Parent == "Default Browser") ? $temp : $agent->Parent;
-					}
-					if(isset($agent->Platform)){
-						$this->data['platform'] = ($agent->Platform == "Default Browser") ? NULL : $agent->Platform;
-					}
-				} catch(Exception $e){
-					if(!$this->debug){
-						$this->_image();
-					}
-					$info = date('H:i:s')." - PHPBrowscap Exception thrown >> \r\n";
-					$info .= ">>\t".$e->getMessage()."\r\n";
-					$trace = $e->getTrace();
-					$info .= ">>\t".$trace[0]['file'].":".$trace[0]['line'];
-					$this->_log($info);
-				}
-			}
-			if(file_exists($this->dirs['categorizr']) && !isset($skip)){
-				@include($this->dirs['categorizr']);
-				$agent = categorizr();
-				if(isset($agent)){
-					$this->data['platform'] = $agent;
-					$skip = true;
-				}
-			}
+				break;
 		}
 		if(isset($agent)){
-			$this->test['agent'] = $agent;
-			$this->test['data_initial'] = $this->data;
+			$this->test['device_detection']['info'] = $agent;
+			$this->test['data']['initial'] = $this->data;
 		} else {
 			$info = date('H:i:s')." - OpenTrack::_getDeviceInfo() >> \r\n";
 			$info .= ">>\tNo device detection methods were successful. Please ensure you have implemented at least one of the possible methods.\r\n";
@@ -264,9 +235,77 @@ class OpenTrack{
 		}
 	}
 	
+	private function _browscapini(){
+		$agent = get_browser($_SERVER['HTTP_USER_AGENT'], true);
+		$this->test['device_detection']['method'] = 'browscap.ini';
+		foreach ($agent as $key => $value) {
+			switch ($key) {
+				case 'comment':
+					$this->data['client'] = ($value == "Default Browser") ? NULL : $value;
+					break;
+				case 'platform':
+					$temp = (isset($this->data['platform']) && is_null($this->data['platform'])) ? NULL : $this->data['platform'];
+					$this->data['platform'] = ($value == "unknown") ? $temp : $value;
+					break;
+				case 'platform_description':
+					$temp = (isset($this->data['platform']) && is_null($this->data['platform'])) ? NULL : $this->data['platform'];
+					$this->data['platform'] = ($value == "unknown") ? $temp : $value;
+					break;
+			}
+		}
+		return $agent;
+	}
+	
+	private function _phpbrowscap(){
+		try{
+			if(!is_dir($this->dirs['cache'])){
+				mkdir($this->dirs['cache'], 0777, true);
+			}
+			@include $this->dirs['browscap'];
+			$bc = new Browscap($this->dirs['cache']);
+			$agent = $bc->getBrowser();
+			if(isset($agent)){
+				$this->test['device_detection']['method'] = 'PHPBrowscap';
+			}
+			if(isset($agent->Comment)){
+				$temp = (isset($this->data['client']) && is_null($this->data['client'])) ? NULL : $this->data['client'];
+				$this->data['client'] = ($agent->Comment == "Default Browser") ? $temp : $agent->Comment;
+			}
+			if(isset($agent->Parent)){
+				$temp = (isset($this->data['client']) && is_null($this->data['client'])) ? NULL : $this->data['client'];
+				$this->data['client'] = ($agent->Parent == "Default Browser") ? $temp : $agent->Parent;
+			}
+			if(isset($agent->Platform)){
+				$this->data['platform'] = ($agent->Platform == "Default Browser") ? NULL : $agent->Platform;
+			}
+			return $agent;
+		} catch(Exception $e){
+			if(!$this->debug){
+				$this->_image();
+			}
+			$info = date('H:i:s')." - PHPBrowscap Exception thrown >> \r\n";
+			$info .= ">>\t".$e->getMessage()."\r\n";
+			$trace = $e->getTrace();
+			$info .= ">>\t".$trace[0]['file'].":".$trace[0]['line'];
+			$this->_log($info);
+			continue;
+		}
+	}
+	
+	private function _categorizer(){
+		@include($this->dirs['categorizr']);
+		$agent = categorizr();
+		if(isset($agent)){
+			$this->test['device_detection']['method'] = 'categorizr';
+			$this->data['platform'] = $agent;
+			return $agent;
+		}
+	}
+	
 	private function _prepareTable(){
 		$table = $this->_createTable();
 		if($table){
+			$this->test['db_info']['table'] = $this->db_tabl;
 			$field_exists = mysql_query("SHOW COLUMNS FROM `".$this->db_tabl."`;", $this->db);
 			$found = array();
 			while($row = mysql_fetch_assoc($field_exists)){
@@ -278,9 +317,7 @@ class OpenTrack{
 			} else {
 				$prep = $this->_removeFields($diff);
 			}
-			$this->test['found'] = $found;
-			$this->test['diff'] = $diff;
-			$this->test['data_final'] = $this->data;
+			$this->test['data']['final'] = $this->data;
 			return $prep;
 		} else {
 			return false;
@@ -333,6 +370,7 @@ class OpenTrack{
 				}
 			}
 			if($create){
+				$this->test['db_info']['creation'] = true;
 				return true;
 			} else {
 				return false;
@@ -382,8 +420,10 @@ class OpenTrack{
 					}
 				}
 				if($add){
+					$this->test['db_info']['fields'] = array('type'=>'addition', 'result'=>'success', 'columns'=>$diff);
 					return true;
 				} else {
+					$this->test['db_info']['fields'] = array('type'=>'addition', 'result'=>'failure', 'columns'=>$diff);
 					return false;
 				}
 			}
@@ -396,13 +436,16 @@ class OpenTrack{
 			foreach ($diff as $key => $value) {
 				array_splice($this->data, array_search($value, array_keys($this->data)), 1);
 			}
-		}
-		$size = count(array_diff($this->data, $diff));
-		if(count($this->data) > $size){
-			$info = date('H:i:s')." - OpenTrack::_removeFields() >> \r\n";
-			$info .= ">>\tAdditional entries could not be removed from collected data.";
-			$this->_log($info);
-			return false;
+			$size = count(array_diff($this->data, $diff));
+			if(count($this->data) > $size){
+				$info = date('H:i:s')." - OpenTrack::_removeFields() >> \r\n";
+				$info .= ">>\tAdditional entries could not be removed from collected data.";
+				$this->_log($info);
+				$this->test['db_info']['fields'] = array('type'=>'removal', 'result'=>'failure', 'columns'=>$diff);
+				return false;
+			}
+			$this->test['db_info']['fields'] = array('type'=>'removal', 'result'=>'success', 'columns'=>$diff);
+			return true;
 		}
 		return true;
 	}
@@ -424,8 +467,8 @@ class OpenTrack{
 		}
 		$fields .= ")";
 		$values .= ")";
-		$this->test['fields'] = $fields;
-		$this->test['values'] = $values;
+		$this->test['insert']['fields'] = $fields;
+		$this->test['insert']['values'] = $values;
 		$this->data['fields'] = $fields;
 		$this->data['values'] = $values;
 	}
@@ -464,6 +507,8 @@ class OpenTrack{
 		$log = fopen($this->dirs['logs'].$filename, 'a');
 		fwrite($log, $info."\r\n\r\n");
 		fclose($log);
+		$this->errors++;
+		$this->test['errors'] = $this->errors;
 	}
 	
 	private function _handleErrors($errno, $errstr, $errfile, $errline, $errcontext){
