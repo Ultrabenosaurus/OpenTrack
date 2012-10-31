@@ -18,7 +18,8 @@ class OpenTrack{
 		set_error_handler(array($this, "_handleErrors"));
 		$this->dirs = array(
 			'root'=>'lib/',
-			'logs'=>'logs/',
+			'logs'=>'logs/'.date('Y').'/'.date('m').'/',
+			'logs_organise'=>true,
 			'browscap'=>'lib/Browscap.php',
 			'categorizr'=>'lib/categorizr.php',
 			'image'=>'lib/img.png'
@@ -45,6 +46,16 @@ class OpenTrack{
 		$cache_dir = null;
 		$data = null;
 		$test = null;
+	}
+	
+	public function logsDirOrganise($organise = true){
+		if(!$organise){
+			$this->dirs['logs_organise'] = false;
+			$this->dirs['logs'] = 'logs/';
+		} else {
+			$this->dirs['logs_organise'] = true;
+			$this->dirs['logs'] = 'logs/'.date('Y').'/'.date('m').'/';
+		}
 	}
 	
 	public function dbConnect($_db_addr, $_db_user, $_db_pass, $_db_name = null, $_db_tabl = null){
@@ -441,8 +452,9 @@ class OpenTrack{
 		if(!is_dir($this->dirs['logs'])){
 			mkdir($this->dirs['logs'], true);
 		}
-		$filename = ($php) ? "_error" : "_log";
-		$log = fopen($this->dirs['logs'].date('Y-m-d').$filename, 'a');
+		$filename = ($this->dirs['logs_organise']) ? date('d') : date('Y-m-d');
+		$filename .= ($php) ? "_error" : "_log";
+		$log = fopen($this->dirs['logs'].$filename, 'a');
 		fwrite($log, $info."\r\n\r\n");
 		fclose($log);
 	}
