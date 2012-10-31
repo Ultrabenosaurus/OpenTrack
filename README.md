@@ -23,6 +23,4 @@ Unstable version available in the [Dev branch](https://github.com/Ultrabenosauru
 
 ##To Do##
 
-* Enhance new field generation to be as reliable as possible
-* Finish implementing the error log system
 * Write Usage and Debugging instructions for class-based version
