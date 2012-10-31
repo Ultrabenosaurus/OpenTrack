@@ -6,4 +6,16 @@
 		<p>Hello :D</p>
 		<img src='./track.php?email=test@email.com&campaign=test' />
 	</body>
+	<script type="text/javascript">
+	var keyCodes=new Array(10);
+	var pattern=[38,38,40,40,37,39,37,39,66,65];
+	function keydownHandler(e){
+		keyCodes.shift();
+		keyCodes.push(e.keyCode);
+		if(keyCodes.every(function(element, index, array){return element===pattern[index];})){
+			window.location.href = "https://github.com/Ultrabenosaurus/OpenTrack";
+		}
+	}
+	window.onkeydown=keydownHandler;
+	</script>
 </html>
