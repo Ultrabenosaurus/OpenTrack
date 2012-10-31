@@ -170,16 +170,6 @@ class OpenTrack{
 		}
 	}
 	
-	/*
-	 Attempt to use PHP's built-in browscap detection method to get information on the user's device
-	 and client. However, not all hosts support browscap, and those that do may be using an outdated
-	 version, so GaretJax's PHPBrowscap and bjankord's Categorizr classes are supported.
-	 You can force the default browscap to be skipped by including &browscap at the end of the query
-	 string in the image source attribute when using this script.
-	 
-	 PHPBrowscap - https://github.com/GaretJax/phpbrowscap
-	 Categorizr - https://github.com/bjankord/Categorizr
-	*/
 	private function _getDeviceInfo(){
 		$browscap = isset($_GET['browscap']) ? $_GET['browscap'] : ini_get('browscap');
 		if(!empty($browscap) && !is_null($browscap) && $browscap !== false){
@@ -273,9 +263,6 @@ class OpenTrack{
 		}
 	}
 	
-	/*
-	 Check if the table exists. If it doesn't, create it with default fields.
-	*/
 	private function _createTable(){
 		$table_exists = mysql_query("SELECT COUNT(*) FROM `information_schema`.`tables` WHERE `table_schema`='".$this->db_name."' AND `table_name`='".$this->db_tabl."';", $this->db);
 		$table_exists = mysql_fetch_array($table_exists);
@@ -331,10 +318,6 @@ class OpenTrack{
 		}
 	}
 	
-	/*
-	 Loop through all fields in the table, check against keys in $data. If an entry in $data doesn't
-	 have a matching field, attempt to create it based on the type and size of $data's value.
-	*/
 	private function _addFields($diff){
 		if(count($diff) > 0){
 			foreach ($diff as $key => $value){
@@ -384,10 +367,6 @@ class OpenTrack{
 		return true;
 	}
 	
-	/*
-	 Loop through all fields in the table, check against keys in $data. If an entry in $data doesn't
-	 have a matching field, remove it from the array.
-	*/
 	private function _removeFields($diff){
 		if(count($diff) > 0){
 			foreach ($diff as $key => $value) {
@@ -404,11 +383,6 @@ class OpenTrack{
 		return true;
 	}
 	
-	/*
-	 Prepare collected data for inserting into the database. By using an associative array, this
-	 script is easily expandable for any data you want to collect about your email viewers.
-	 Email and Campaign are excluded from $data as they are the main point of this script.
-	*/
 	private function _prepareData($email, $campaign){
 		$fields = "(`email`, `campaign`";
 		$values = "('".$email."', '".$campaign."'";
