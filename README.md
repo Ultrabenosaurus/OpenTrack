@@ -23,4 +23,4 @@ Unstable version available in the [Dev branch](https://github.com/Ultrabenosauru
 
 ##To Do##
 
-* Write Usage and Debugging instructions for class-based version
+* Write Usage and Debugging instructions
