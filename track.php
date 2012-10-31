@@ -1,6 +1,6 @@
 <?php
 $test = (isset($_GET['test'])) ? true : false;
-include 'lib/opentrack.class.php';
+include 'lib/OpenTrack.php';
 $tracker = new OpenTrack($test);
 $tracker->logsDirOrganise(false);
 $tracker->dbConnect("address", "username", "password", "databasename", "tablename");
