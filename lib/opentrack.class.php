@@ -18,7 +18,7 @@ class OpenTrack{
 		set_error_handler(array($this, "_handleErrors"));
 		$this->dirs = array(
 			'root'=>'lib/',
-			'logs'=>'lib/logs/',
+			'logs'=>'logs/',
 			'browscap'=>'lib/Browscap.php',
 			'categorizr'=>'lib/categorizr.php',
 			'image'=>'lib/img.png'
@@ -148,14 +148,18 @@ class OpenTrack{
 			if($prep){
 				$this->_prepareData($em_camp[0], $em_camp[1]);
 				if(!$_test){
-					header("Content-Type: image/png");
-					echo file_get_contents($this->dirs['image']);
+					$this->_image();
 					return $this->_insertData();
 				} else {
 					return $this->test;
 				}
 			}
 		}
+	}
+	
+	private function _image(){
+		header("Content-Type: image/png");
+		echo file_get_contents($this->dirs['image']);
 	}
 	
 	private function _getFromQueryString(){
@@ -213,6 +217,7 @@ class OpenTrack{
 						$this->data['platform'] = ($agent->Platform == "Default Browser") ? NULL : $agent->Platform;
 					}
 				} catch(Exception $e){
+					$this->_image();
 					$info = date('H:i:s')." - PHPBrowscap Exception thrown >> \r\n";
 					$info .= ">>\t".$e->getMessage()."\r\n";
 					$trace = $e->getTrace();
