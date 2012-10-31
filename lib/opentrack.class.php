@@ -144,8 +144,8 @@ class OpenTrack{
 			if($this->device){
 				$this->_getDeviceInfo();
 			}
-			$prep = $this->_prepareTable();
-			if($prep){
+			$table_prep = $this->_prepareTable();
+			if($table_prep){
 				$this->_prepareData($em_camp[0], $em_camp[1]);
 				if(!$_test){
 					$this->_image();
@@ -155,6 +155,7 @@ class OpenTrack{
 				}
 			}
 		}
+		return false;
 	}
 	
 	private function _image(){
@@ -168,7 +169,7 @@ class OpenTrack{
 		} else {
 			$info = date('H:i:s')." - OpenTrack::_getFromQueryString() >> \r\n";
 			$info .= ">>\tThe script was not passed both an email address and a campaign name.\r\n";
-			$info .= ">>\tThese are the main purpose of this script, if you do not have a need for them then this script is not designed for your current project.";
+			$info .= ">>\tThese are the main purpose of this script, if you do not have a need for them then this script may not be ideal for your current project.";
 			$this->_log($info);
 			return false;
 		}
@@ -405,7 +406,6 @@ class OpenTrack{
 		}
 		$fields .= ")";
 		$values .= ")";
-
 		$this->test['fields'] = $fields;
 		$this->test['values'] = $values;
 		$this->data['fields'] = $fields;
