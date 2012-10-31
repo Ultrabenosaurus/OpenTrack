@@ -10,10 +10,5 @@ This is the unstable development version. It is not recommended to use this vers
 
 ##Working On##
 
-* PHP error handling
-* Method reliability
-
-##To Do##
-
 * Enhance new field generation to be as reliable as possible
-* Test error logging
+* Testing D:
