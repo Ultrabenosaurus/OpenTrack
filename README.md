@@ -10,5 +10,9 @@ This is the unstable development version. It is not recommended to use this vers
 
 ##Working On##
 
-* Enhance new field generation to be as reliable as possible
 * Testing D:
+* Merge with Master branch
+
+##To Do##
+
+* Enhance new field generation to be as reliable as possible
