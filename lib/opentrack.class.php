@@ -15,7 +15,7 @@ class OpenTrack{
 	private $test;
 
 	public function __construct($_device = true, $_cache_dir = 'phpbc_cache/', $_db_fiel = false){
-		error_reporting(~E_NOTICE);
+		set_error_handler(array($this, "_handleErrors"));
 		$this->dirs = array(
 			'root'=>'lib/',
 			'logs'=>'lib/logs/',
@@ -433,7 +433,7 @@ class OpenTrack{
 		$this->data['values'] = $values;
 	}
 	
-	private function _insertData($fields, $values){
+	private function _insertData(){
 		$response = mysql_query("INSERT INTO `".$this->db_tabl."` ".$this->data['fields']." VALUES ".$this->data['values'].";", $this->db);
 		if(!$response){
 			$count = 0;
@@ -458,13 +458,51 @@ class OpenTrack{
 		}
 	}
 	
-	private function _log($info){
+	private function _log($info, $php = false){
 		if(!is_dir($this->dirs['logs'])){
 			mkdir($this->dirs['logs'], true);
 		}
-		$log = fopen($this->dirs['logs'].date('Y-m-d').'_log', 'a');
+		$filename = ($php) ? "_error" : "_log";
+		$log = fopen($this->dirs['logs'].date('Y-m-d').$filename, 'a');
 		fwrite($log, $info."\r\n\r\n");
 		fclose($log);
+	}
+	
+	private function _handleErrors($errno, $errstr, $errfile, $errline, $errcontext){
+		switch($errno){
+			case 2:
+				$errtype = " - Warning >>\r\n";
+				break;
+			case 8:
+				return;
+				break;
+			case 256:
+				$errtype = " - User Error >>\r\n";
+				break;
+			case 512:
+				$errtype = " - User Warning >>\r\n";
+				break;
+			case 1024:
+				$errtype = " - User Notice >>\r\n";
+				break;
+			case 2048:
+				$errtype = " - Strict >>\r\n";
+				break;
+			case 4096:
+				$errtype = " - Recoverable Error >>\r\n";
+				break;
+			case 8192:
+				$errtype = " - Deprecated >>\r\n";
+				break;
+			case 16384:
+				$errtype = " - User Deprecated >>\r\n";
+				break;
+		}
+		$error = date('H:i:s').$errtype.">>\t".$errstr."\r\n>>\tFile: ".$errfile."\r\n>>\tLine: ".$errline;
+		$this->_log($error, true);
+		header("Content-Type: image/png");
+		echo file_get_contents($this->dirs['image']);
+		die();
 	}
 }
 
