@@ -1,13 +1,12 @@
 <?php
-
+$test = (isset($_GET['test'])) ? true : false;
 include 'lib/opentrack.class.php';
-$tracker = new OpenTrack();
+$tracker = new OpenTrack($test);
+$tracker->logsDirOrganise(false);
 $tracker->dbConnect("address", "username", "password", "databasename", "tablename");
-if(isset($_GET['test'])){
-	$results = $tracker->track(true);
+$results = $tracker->track();
+if($test){
 	echo "<pre>" . print_r($results, true) . "</pre>";
-} else {
-	$tracker->track();
 }
 
 ?>

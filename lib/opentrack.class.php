@@ -2,6 +2,7 @@
 
 class OpenTrack{
 	private $dirs;
+	private $debug;
 	private $device;
 	private $db;
 	private $db_addr;
@@ -14,8 +15,10 @@ class OpenTrack{
 	private $data;
 	private $test;
 
-	public function __construct($_device = true, $_cache_dir = 'phpbc_cache/', $_db_fiel = false){
-		set_error_handler(array($this, "_handleErrors"));
+	public function __construct($_debug = false, $_device = true, $_cache_dir = 'phpbc_cache/', $_db_fiel = false){
+		if(!$_debug){
+			set_error_handler(array($this, "_handleErrors"));
+		}
 		$this->dirs = array(
 			'root'=>'lib/',
 			'logs'=>'logs/'.date('Y').'/'.date('m').'/',
@@ -24,12 +27,13 @@ class OpenTrack{
 			'categorizr'=>'lib/categorizr.php',
 			'image'=>'lib/img.png'
 		);
+		$this->debug = $_debug;
 		$this->device = $_device;
 		$this->db = null;
 		$this->db_fiel = $_db_fiel;
 		$this->dirs['cache'] = $this->dirs['root'].$_cache_dir;
 		$this->data = array();
-		$this->test = array();
+		$this->test = array('dirs'=>$this->dirs);
 	}
 	
 	public function __destruct(){
@@ -148,7 +152,7 @@ class OpenTrack{
 		}
 	}
 	
-	public function track($_test = false){
+	public function track(){
 		$params = $this->_getFromQueryString();
 		if($params){
 			$em_camp = explode(',', $params);
@@ -158,7 +162,7 @@ class OpenTrack{
 			$table_prep = $this->_prepareTable();
 			if($table_prep){
 				$this->_prepareData($em_camp[0], $em_camp[1]);
-				if(!$_test){
+				if($this->debug === false){
 					$this->_image();
 					return $this->_insertData();
 				} else {
@@ -209,7 +213,7 @@ class OpenTrack{
 			if(file_exists($this->dirs['browscap'])){
 				try{
 					if(!is_dir($this->dirs['cache'])){
-						mkdir($this->dirs['cache'], true);
+						mkdir($this->dirs['cache'], 0777, true);
 					}
 					@include $this->dirs['browscap'];
 					$bc = new Browscap($this->dirs['cache']);
@@ -229,7 +233,9 @@ class OpenTrack{
 						$this->data['platform'] = ($agent->Platform == "Default Browser") ? NULL : $agent->Platform;
 					}
 				} catch(Exception $e){
-					$this->_image();
+					if(!$this->debug){
+						$this->_image();
+					}
 					$info = date('H:i:s')." - PHPBrowscap Exception thrown >> \r\n";
 					$info .= ">>\t".$e->getMessage()."\r\n";
 					$trace = $e->getTrace();
@@ -449,8 +455,8 @@ class OpenTrack{
 	}
 	
 	private function _log($info, $php = false){
-		if(!is_dir($this->dirs['logs'])){
-			mkdir($this->dirs['logs'], true);
+		if(!file_exists($this->dirs['logs'])){
+			mkdir($this->dirs['logs'], 0777, true);
 		}
 		$filename = ($this->dirs['logs_organise']) ? date('d') : date('Y-m-d');
 		$filename .= ($php) ? "_error" : "_log";
@@ -491,8 +497,7 @@ class OpenTrack{
 		}
 		$error = date('H:i:s').$errtype.">>\t".$errstr."\r\n>>\tFile: ".$errfile."\r\n>>\tLine: ".$errline;
 		$this->_log($error, true);
-		header("Content-Type: image/png");
-		echo file_get_contents($this->dirs['image']);
+		$this->_image();
 		die();
 	}
 }
