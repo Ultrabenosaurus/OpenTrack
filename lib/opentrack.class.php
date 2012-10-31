@@ -38,18 +38,19 @@ class OpenTrack{
 	
 	public function __destruct(){
 		$this->dbDisconnect();
-		$dirs = null;
-		$device = null;
-		$db = null;
-		$db_addr = null;
-		$db_user = null;
-		$db_pass = null;
-		$db_name = null;
-		$db_tabl = null;
-		$db_fiel = null;
-		$cache_dir = null;
-		$data = null;
-		$test = null;
+		$this->dirs = null;
+		$this->debug = null;
+		$this->device = null;
+		$this->db = null;
+		$this->db_addr = null;
+		$this->db_user = null;
+		$this->db_pass = null;
+		$this->db_name = null;
+		$this->db_tabl = null;
+		$this->db_fiel = null;
+		$this->cache_dir = null;
+		$this->data = null;
+		$this->test = null;
 	}
 	
 	public function logsDirOrganise($organise = true){
