@@ -15,4 +15,6 @@ This is the unstable development version. It is not recommended to use this vers
 
 ##To Do##
 
+Things to do in next dev version once the current version is stablised and moved to the Master branch.
+
 * Look into adding support for popular ORM ([Kohana](https://github.com/kohana/orm), [Doctrine](http://www.doctrine-project.org), [RedBean](http://redbeanphp.com/), etc)

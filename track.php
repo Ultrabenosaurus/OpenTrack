@@ -1,4 +1,5 @@
 <?php
+
 $test = (isset($_GET['test'])) ? true : false;
 include 'lib/OpenTrack.php';
 $tracker = new OpenTrack($test);
