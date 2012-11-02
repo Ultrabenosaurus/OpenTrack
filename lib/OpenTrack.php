@@ -179,7 +179,12 @@ class OpenTrack{
 				}
 			}
 		}
-		return false;
+		if($this->debug === false){
+			$this->_image();
+			return false;
+		} else {
+			return "Errors occurred. Please check <b>".$this->dirs['logs']."</b> for new log entires.";
+		}
 	}
 	
 	private function _image(){
@@ -189,7 +194,16 @@ class OpenTrack{
 	
 	private function _getFromQueryString(){
 		if((isset($_GET['email']) && !empty($_GET['email'])) && (isset($_GET['campaign']) && !empty($_GET['campaign']))){
-			return $_GET['email'].",".$_GET['campaign'];
+			if(preg_match('/^[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i', $_GET['email']) === 1){
+				return $_GET['email'].",".$_GET['campaign'];
+			} else {
+				$info = date('H:i:s')." - OpenTrack::_getFromQueryString() >> \r\n";
+				$info .= ">>\tThe email address provided was invalid.\r\n";
+				$info .= ">>\tRegex: '/^[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i'\r\n";
+				$info .= ">>\tEmail: ".$_GET['email'];
+				$this->_log($info);
+				return false;
+			}
 		} else {
 			$info = date('H:i:s')." - OpenTrack::_getFromQueryString() >> \r\n";
 			$info .= ">>\tThe script was not passed both an email address and a campaign name.\r\n";
@@ -396,6 +410,12 @@ class OpenTrack{
 						$field = "VARCHAR(50) NULL DEFAULT NULL";
 						break;
 					case 'string':
+						if((int)$length*2 > 200){
+							$field = "TEXT NULL DEFAULT NULL";
+						} else {
+							$field = "VARCHAR(".((int)$length*2).") NULL DEFAULT NULL";
+						}
+						break;
 					case 'double':
 					default:
 						$field = "VARCHAR(".((int)$length*2).") NULL DEFAULT NULL";

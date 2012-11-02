@@ -15,4 +15,4 @@ This is the unstable development version. It is not recommended to use this vers
 
 ##To Do##
 
-* Enhance new field generation to be as reliable as possible
+* Look into adding support for popular ORM ([Kohana](https://github.com/kohana/orm), [Doctrine](http://www.doctrine-project.org), [RedBean](http://redbeanphp.com/), etc)
