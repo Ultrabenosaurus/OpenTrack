@@ -14,23 +14,22 @@ class OpenTrack{
 	private $data;
 	private $test;
 
-	public function __construct($_debug = false, $_device = true, $_cache_dir = 'phpbc_cache/', $_db_fiel = false){
+	public function __construct($_debug = false, $_device = true, $_db_fiel = false){
 		if(!$_debug){
 			set_error_handler(array($this, "_handleErrors"));
 		}
 		$this->dirs = array(
-			'root'=>'lib/',
-			'logs'=>'logs/'.date('Y').'/'.date('m').'/',
-			'logs_organize'=>true,
-			'browscap'=>'lib/Browscap.php',
-			'categorizr'=>'lib/categorizr.php',
-			'image'=>'lib/img.png'
+			'root'=>getcwd().'/',
+			'logs_organize'=>true
 		);
+		$this->dirs['image'] = $this->dirs['root'].'lib/img.png';
+		$this->dirs['logs'] = $this->dirs['root'].'logs/'.date('Y').'/'.date('m').'/';
+		$this->dirs['devices'] = $this->dirs['root'].'lib/devices/';
+		$this->dirs['phpbc_cache'] = $this->dirs['devices'].'phpbc_cache/';
 		$this->debug = $_debug;
 		$this->device = $_device;
 		$this->db = null;
 		$this->db_fiel = $_db_fiel;
-		$this->dirs['cache'] = $this->dirs['root'].$_cache_dir;
 		$this->data = array();
 		$this->test = array(
 			'dirs'=>$this->dirs,
@@ -92,10 +91,10 @@ class OpenTrack{
 	public function logsDirOrganize($organize = true){
 		if(!$organize){
 			$this->dirs['logs_organize'] = false;
-			$this->dirs['logs'] = 'logs/';
+			$this->dirs['logs'] = $this->dirs['root'].'logs/';
 		} else {
 			$this->dirs['logs_organize'] = true;
-			$this->dirs['logs'] = 'logs/'.date('Y').'/'.date('m').'/';
+			$this->dirs['logs'] = $this->dirs['root'].'logs/'.date('Y').'/'.date('m').'/';
 		}
 		$this->test['dirs'] = $this->dirs;
 	}
@@ -288,11 +287,11 @@ class OpenTrack{
 	
 	private function _phpbrowscap(){
 		try{
-			if(!is_dir($this->dirs['cache'])){
-				mkdir($this->dirs['cache'], 0777, true);
+			if(!is_dir($this->dirs['phpbc_cache'])){
+				mkdir($this->dirs['phpbc_cache'], 0777, true);
 			}
-			@include $this->dirs['browscap'];
-			$bc = new Browscap($this->dirs['cache']);
+			@include $this->dirs['devices'].'Browscap.php';
+			$bc = new Browscap($this->dirs['phpbc_cache']);
 			$agent = $bc->getBrowser();
 			if(isset($agent)){
 				$this->test['device_detection']['method'] = 'PHPBrowscap';
@@ -323,7 +322,7 @@ class OpenTrack{
 	}
 	
 	private function _categorizer(){
-		@include($this->dirs['categorizr']);
+		@include($this->dirs['devices'].'categorizr.php');
 		$agent = categorizr();
 		if(isset($agent)){
 			$this->test['device_detection']['method'] = 'categorizr';
