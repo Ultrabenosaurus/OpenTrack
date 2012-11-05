@@ -1,3 +1,7 @@
+#WARNING#
+
+PHPBrowscap is currently set to use a local copy of `browscap.ini` as the project is down while ownership is transferred. I will be keeping an eye out for the project's revival and change back to PHPBrowscap's auto-update feature when it happens.
+
 #OpenTrack#
 
 A simple script to help you track who opens your emails.

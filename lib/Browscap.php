@@ -109,7 +109,7 @@ class Browscap
 	 *
 	 * @var string
 	 */
-	public $localFile = null;
+	public $localFile = 'lib/devices/php_browscap.ini';
 
 	/**
 	 * The useragent to include in the requests made by the class during the
