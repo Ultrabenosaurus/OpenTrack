@@ -23,7 +23,4 @@ Unstable version available in the [Dev branch](https://github.com/Ultrabenosauru
 
 ##To Do##
 
-Things to do to this version before moving next stable version from dev branch.
-
 * Write Usage and Debugging instructions
-* PHPDocumentor DocBlocks
