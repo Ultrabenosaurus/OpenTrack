@@ -1,29 +1,155 @@
 <?php
 
+/**
+* OpenTrack - a simple class to gather information on the people who open your emails
+* 
+* This class is designed to be used in email newsletters or other group emails in order
+* to collect information on the people who open the email. It cannot track how long the
+* email was open for or whether or not the user clicked any links inside the email, but
+* by default it will add a new record to a MySQL database containing the email address,
+* email campaign, date/time and the device used to view the email.
+* 
+* This class requires access to a MySQL database in order to function.
+* Device detection requires one of the following:
+* * browscap.ini (http://de3.php.net/manual/en/function.get-browser.php)
+* * GaretJax's PHPBrowscap class (https://github.com/GaretJax/phpbrowscap)
+* * bjankord's Categorizr class (https://github.com/bjankord/Categorizr)
+* 
+*
+* @package  OpenTrack
+* @version  1.6
+* @author   Dan Bennett <danielj.bennett@yahoo.com>
+* @license  http://opensource.org/licenses/BSD-3-Clause BSD 3-Clause
+* @link     https://github.com/Ultrabenosaurus/OpenTrack/
+*/
 class OpenTrack{
+	/**
+	 * $dirs - An array of directories needed for the class to run
+	 *
+	 * @var array
+	 *
+	 * @access private
+	 */
 	private $dirs;
+
+	/**
+	 * $debug - Whether or not the class is running in debug mode
+	 *
+	 * @var boolean
+	 *
+	 * @access private
+	 */
 	private $debug;
+
+	/**
+	 * $device - Whether or not to attempt device detection
+	 *
+	 * @var boolean
+	 *
+	 * @access private
+	 */
 	private $device;
+
+	/**
+	 * $db - The MySQL connection resource
+	 *
+	 * @var resource
+	 *
+	 * @access private
+	 */
 	private $db;
+
+	/**
+	 * $db_addr - MySQL URI to connect to
+	 *
+	 * @var string
+	 *
+	 * @access private
+	 */
 	private $db_addr;
+
+	/**
+	 * $db_user - The username with which to connect
+	 *
+	 * @var string
+	 *
+	 * @access private
+	 */
 	private $db_user;
+
+	/**
+	 * $db_pass - The password with which to connect
+	 *
+	 * @var string
+	 *
+	 * @access private
+	 */
 	private $db_pass;
+
+	/**
+	 * $db_name - The database to connect to
+	 *
+	 * @var string
+	 *
+	 * @access private
+	 */
 	private $db_name;
+
+	/**
+	 * $db_tabl - The table in which to store data
+	 *
+	 * @var string
+	 *
+	 * @access private
+	 */
 	private $db_tabl;
+
+	/**
+	 * $db_fiel - Whether new fields should be added to the table or removed from $this->data
+	 *
+	 * @var boolean
+	 *
+	 * @access private
+	 */
 	private $db_fiel;
-	private $cache_dir;
+
+	/**
+	 * $data - An array containing all collected data
+	 *
+	 * @var array
+	 *
+	 * @access private
+	 */
 	private $data;
+
+	/**
+	 * $test - An array containing various debugging information
+	 *
+	 * @var array
+	 *
+	 * @access private
+	 */
 	private $test;
 
+	/**
+	 * Construction method - sets up the basic variables needed to start tracking
+	 * 
+	 * @param boolean $debug      Whether or not the class is running in debug mode.
+	 * @param boolean $_device    Whether or not to attempt device detection.
+	 * @param string  $_cache_dir PHPBrowscap's cache directory (will be appended to the root dir).
+	 * @param mixed   $_db_fiel   Whether data targetting non-existing fields should be deleted
+	 *                            or have the fields created.
+	 *
+	 * @access public
+	 */
 	public function __construct($_debug = false, $_device = true, $_cache_dir = 'phpbc_cache/', $_db_fiel = false){
-		$this->errors = 0;
 		if(!$_debug){
 			set_error_handler(array($this, "_handleErrors"));
 		}
 		$this->dirs = array(
 			'root'=>'lib/',
 			'logs'=>'logs/'.date('Y').'/'.date('m').'/',
-			'logs_organise'=>true,
+			'logs_organize'=>true,
 			'browscap'=>'lib/Browscap.php',
 			'categorizr'=>'lib/categorizr.php',
 			'image'=>'lib/img.png'
@@ -42,8 +168,14 @@ class OpenTrack{
 		);
 	}
 	
+
+	/**
+	 * Nullifies all class variables and disconnects from the database
+	 * 
+	 * @access public
+	 */
 	public function __destruct(){
-		$this->dbDisconnect();
+		$this->dbDisconnect(true);
 		$this->dirs = null;
 		$this->debug = null;
 		$this->device = null;
@@ -54,11 +186,19 @@ class OpenTrack{
 		$this->db_name = null;
 		$this->db_tabl = null;
 		$this->db_fiel = null;
-		$this->cache_dir = null;
 		$this->data = null;
 		$this->test = null;
 	}
 	
+
+	/**
+	 * The method to actually collect and store data
+	 * 
+	 * @access public
+	 *
+	 * @return mixed False or $this->test on failure, depending on debug mode;
+	 *               True or $this->test on success, depending on debug mode.
+	 */
 	public function track(){
 		$params = $this->_getFromQueryString();
 		if($params){
@@ -75,27 +215,59 @@ class OpenTrack{
 				} else {
 					return $this->test;
 				}
+			} else {
+				if($this->debug === false){
+					$this->_image();
+					return false;
+				} else {
+					return $this->test;
+				}
 			}
 		}
 		if($this->debug === false){
 			$this->_image();
 			return false;
 		} else {
-			return "Errors occurred. Please check <b>".$this->dirs['logs']."</b> for new log entires.";
+			return $this->test;
 		}
 	}
 	
-	public function logsDirOrganise($organise = true){
-		if(!$organise){
-			$this->dirs['logs_organise'] = false;
+
+	/**
+	 * Toggles log directory structure
+	 * 
+	 * @param boolean $organize Whether to organize the log directory or name the log file by the date.
+	 *
+	 * @access public
+	 */
+	public function logsDirOrganize($organize = true){
+		if(!$organize){
+			$this->dirs['logs_organize'] = false;
 			$this->dirs['logs'] = 'logs/';
 		} else {
-			$this->dirs['logs_organise'] = true;
+			$this->dirs['logs_organize'] = true;
 			$this->dirs['logs'] = 'logs/'.date('Y').'/'.date('m').'/';
 		}
 		$this->test['dirs'] = $this->dirs;
 	}
 	
+
+	/**
+	 * Creates a MySQL database connection
+	 * 
+	 * If $_db_name and/or $_db_tabl are omitted, you will need to use dbSwitch() before
+	 * you can start tracking emails.
+	 * 
+	 * @param string $_db_addr MySQL URI.
+	 * @param string $_db_user Username to access the database.
+	 * @param string $_db_pass Password to access the database.
+	 * @param mixed  $_db_name Database to access (string or null).
+	 * @param mixed  $_db_tabl Table to use in the database (string or null).
+	 *
+	 * @access public
+	 * 
+	 * @return boolean Indicates success of connecting to MySQL URI.
+	 */
 	public function dbConnect($_db_addr, $_db_user, $_db_pass, $_db_name = null, $_db_tabl = null){
 		if(!is_null($this->db)){
 			$this->dbDisconnect(true);
@@ -122,7 +294,7 @@ class OpenTrack{
 		if(is_resource($conn)){
 			$this->db = $conn;
 			if(!is_null($_db_name)){
-				if($this->dbSwitch($_db_name)){
+				if($this->dbSwitch($_db_name, $_db_tabl)){
 					$this->test['db_info']['address'] = $this->db_addr;
 					$this->test['db_info']['username'] = $this->db_user;
 					$this->test['db_info']['password'] = $this->db_pass;
@@ -137,6 +309,18 @@ class OpenTrack{
 		}
 	}
 	
+
+	/**
+	 * Closes the database connection
+	 * 
+	 * Allow for easily tracking data to multiple tables/databases.
+	 * 
+	 * @param boolean $force Whether or not to drop the connection without attempting to close it properly.
+	 * 
+	 * @access public
+	 * 
+	 * @return boolean Indicates success of disconnecting from database.
+	 */
 	public function dbDisconnect($force = false){
 		if($force){
 			$this->db = null;
@@ -165,7 +349,21 @@ class OpenTrack{
 		}
 	}
 	
-	public function dbSwitch($_db_name){
+
+	/**
+	 * Switch the database/table used for storing data
+	 * 
+	 * Allows for easily tracking data to multiple tables/databases.
+	 * 
+	 * @param mixed $_db_name Database to access (string or null).
+	 * @param mixed $_db_tabl Table to use in the database (string or null).
+	 *
+	 * @access public
+	 * 
+	 * @return boolean Indicates success of switching database
+	 */
+	public function dbSwitch($_db_name, $_db_tabl){
+		$this->db_tabl = $_db_tabl;
 		$active = mysql_select_db($_db_name, $this->db);
 		if(!$active){
 			$count = 0;
@@ -190,11 +388,25 @@ class OpenTrack{
 		}
 	}
 	
+
+	/**
+	 * Display the image to the user
+	 * 
+	 * @access private
+	 */
 	private function _image(){
 		header("Content-Type: image/png");
 		echo file_get_contents($this->dirs['image']);
 	}
 	
+
+	/**
+	 * Get the email address and campaign name from the query string
+	 * 
+	 * @access private
+	 *
+	 * @return mixed Comma-separated combination of email address and campaign name on success, false on failure.
+	 */
 	private function _getFromQueryString(){
 		if((isset($_GET['email']) && !empty($_GET['email'])) && (isset($_GET['campaign']) && !empty($_GET['campaign']))){
 			if(preg_match('/^[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i', $_GET['email']) === 1){
@@ -216,6 +428,15 @@ class OpenTrack{
 		}
 	}
 	
+
+	/**
+	 * Determines which device detection method to use
+	 * 
+	 * A parameter 'device' can be added to the query string to simply skip browscap.ini (useful if
+	 * your server has an outdated version you can't update) or to specify the exact method to use.
+	 * 
+	 * @access private
+	 */
 	private function _getDeviceInfo(){
 		$method = isset($_GET['device']) ? $_GET['device'] : ini_get('browscap');
 		switch($method){
@@ -252,6 +473,14 @@ class OpenTrack{
 		}
 	}
 	
+
+	/**
+	 * Use server's browscap.ini and get_browser() to determine the device
+	 * 
+	 * @access private
+	 *
+	 * @return array An array of the device's information.
+	 */
 	private function _browscapini(){
 		$agent = get_browser($_SERVER['HTTP_USER_AGENT'], true);
 		$this->test['device_detection']['method'] = 'browscap.ini';
@@ -273,6 +502,14 @@ class OpenTrack{
 		return $agent;
 	}
 	
+
+	/**
+	 * Use GaretJax's PHPBrowscap class to determine the device
+	 * 
+	 * @access private
+	 *
+	 * @return mixed Object containing device information on success, or false on failure.
+	 */
 	private function _phpbrowscap(){
 		try{
 			if(!is_dir($this->dirs['cache'])){
@@ -305,10 +542,18 @@ class OpenTrack{
 			$trace = $e->getTrace();
 			$info .= ">>\t".$trace[0]['file'].":".$trace[0]['line'];
 			$this->_log($info);
-			return;
+			return false;
 		}
 	}
 	
+
+	/**
+	 * Use bjankord's Categorizr class to determine the device
+	 * 
+	 * @access private
+	 *
+	 * @return mixed String containing very simplistic device type on success, false on failure.
+	 */
 	private function _categorizer(){
 		@include($this->dirs['categorizr']);
 		$agent = categorizr();
@@ -317,8 +562,22 @@ class OpenTrack{
 			$this->data['platform'] = $agent;
 			return $agent;
 		}
+		return false;
 	}
 	
+
+	/**
+	 * Checks the state of the table to be used against the data collected
+	 * 
+	 * If the table does not exist, it will be created in a state to store the default data collection.
+	 * If data has been collected which targets a non-existing field in the table, it will either be
+	 * removed from $this->data or the class will attempt to add new fields to the table based on the
+	 * values in $this->data.
+	 * 
+	 * @access private
+	 * 
+	 * @return boolean Indicates success of preparing the table for insertion.
+	 */
 	private function _prepareTable(){
 		$table = $this->_createTable();
 		if($table){
@@ -341,6 +600,14 @@ class OpenTrack{
 		}
 	}
 	
+
+	/**
+	 * Check for the tables existence, create in a default state if not found
+	 * 
+	 * @access private
+	 * 
+	 * @return boolean Indicates success of creating table or tables existence.
+	 */
 	private function _createTable(){
 		$table_exists = mysql_query("SELECT COUNT(*) FROM `information_schema`.`tables` WHERE `table_schema`='".$this->db_name."' AND `table_name`='".$this->db_tabl."';", $this->db);
 		$table_exists = mysql_fetch_array($table_exists);
@@ -397,6 +664,16 @@ class OpenTrack{
 		}
 	}
 	
+
+	/**
+	 * Attempt to add new fields in the table if necessary, based on the collected data
+	 * 
+	 * @param array $diff An array of the target fields present in $this->data but not in the table.
+	 *
+	 * @access private
+	 * 
+	 * @return boolean Indicates success.
+	 */
 	private function _addFields($diff){
 		if(count($diff) > 0){
 			foreach ($diff as $key => $value){
@@ -454,6 +731,16 @@ class OpenTrack{
 		return true;
 	}
 	
+
+	/**
+	 * Remove information from $this->data which targets non-existing fields in the table.
+	 * 
+	 * @param array $diff An array of the target fields present in $this->data but not in the table.
+	 *
+	 * @access private
+	 * 
+	 * @return boolean Indicates success
+	 */
 	private function _removeFields($diff){
 		if(count($diff) > 0){
 			foreach ($diff as $key => $value) {
@@ -473,6 +760,15 @@ class OpenTrack{
 		return true;
 	}
 	
+
+	/**
+	 * Prepare the collected data in MySQL INSERT format.
+	 * 
+	 * @param string $email    The email address of the user who opened the email.
+	 * @param string $campaign The campaign to which the opened email belongs.
+	 *
+	 * @access private
+	 */
 	private function _prepareData($email, $campaign){
 		$fields = "(`email`, `campaign`";
 		$values = "('".$email."', '".$campaign."'";
@@ -496,6 +792,14 @@ class OpenTrack{
 		$this->data['values'] = $values;
 	}
 	
+
+	/**
+	 * Insert the collected data into the database.
+	 *
+	 * @access private
+	 * 
+	 * @return boolean Indicates success
+	 */
 	private function _insertData(){
 		$response = mysql_query("INSERT INTO `".$this->db_tabl."` ".$this->data['fields']." VALUES ".$this->data['values'].";", $this->db);
 		if(!$response){
@@ -521,11 +825,19 @@ class OpenTrack{
 		}
 	}
 	
+
+	/**
+	 * Attempt to log errors so that the user never sees a "broken image" icon.
+	 * 
+	 * @param string $info The error to log.
+	 *
+	 * @access private
+	 */
 	private function _log($info, $php = false){
 		if(!file_exists($this->dirs['logs'])){
 			mkdir($this->dirs['logs'], 0777, true);
 		}
-		$filename = ($this->dirs['logs_organise']) ? date('d') : date('Y-m-d');
+		$filename = ($this->dirs['logs_organize']) ? date('d') : date('Y-m-d');
 		$filename .= ($php) ? "_error" : "_log";
 		$log = fopen($this->dirs['logs'].$filename, 'a');
 		fwrite($log, $info."\r\n\r\n");
@@ -534,6 +846,22 @@ class OpenTrack{
 		$this->test['errors'][] = "\r\n".$info;
 	}
 	
+
+	/**
+	 * Intercept non-fatal PHP errors
+	 * 
+	 * This prevents disruption to the users (eg broken image icon) unless something goes terribly wrong
+	 * 
+	 * @param integer $errno      The level of the error raised.
+	 * @param string  $errstr     The error message.
+	 * @param string  $errfile    The filename that the error was raised in.
+	 * @param integer $errline    The line number the error was raised at.
+	 * @param array   $errcontext Points to the active symbol table at the point the error occurred.
+	 *
+	 * @access private
+	 *
+	 * @return mixed Value.
+	 */
 	private function _handleErrors($errno, $errstr, $errfile, $errline, $errcontext){
 		switch($errno){
 			case 2:
