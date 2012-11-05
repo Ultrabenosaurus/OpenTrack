@@ -11,19 +11,17 @@ class OpenTrack{
 	private $db_name;
 	private $db_tabl;
 	private $db_fiel;
-	private $cache_dir;
 	private $data;
 	private $test;
 
 	public function __construct($_debug = false, $_device = true, $_cache_dir = 'phpbc_cache/', $_db_fiel = false){
-		$this->errors = 0;
 		if(!$_debug){
 			set_error_handler(array($this, "_handleErrors"));
 		}
 		$this->dirs = array(
 			'root'=>'lib/',
 			'logs'=>'logs/'.date('Y').'/'.date('m').'/',
-			'logs_organise'=>true,
+			'logs_organize'=>true,
 			'browscap'=>'lib/Browscap.php',
 			'categorizr'=>'lib/categorizr.php',
 			'image'=>'lib/img.png'
@@ -43,7 +41,7 @@ class OpenTrack{
 	}
 	
 	public function __destruct(){
-		$this->dbDisconnect();
+		$this->dbDisconnect(true);
 		$this->dirs = null;
 		$this->debug = null;
 		$this->device = null;
@@ -54,7 +52,6 @@ class OpenTrack{
 		$this->db_name = null;
 		$this->db_tabl = null;
 		$this->db_fiel = null;
-		$this->cache_dir = null;
 		$this->data = null;
 		$this->test = null;
 	}
@@ -75,22 +72,29 @@ class OpenTrack{
 				} else {
 					return $this->test;
 				}
+			} else {
+				if($this->debug === false){
+					$this->_image();
+					return false;
+				} else {
+					return $this->test;
+				}
 			}
 		}
 		if($this->debug === false){
 			$this->_image();
 			return false;
 		} else {
-			return "Errors occurred. Please check <b>".$this->dirs['logs']."</b> for new log entires.";
+			return $this->test;
 		}
 	}
 	
-	public function logsDirOrganise($organise = true){
-		if(!$organise){
-			$this->dirs['logs_organise'] = false;
+	public function logsDirOrganize($organize = true){
+		if(!$organize){
+			$this->dirs['logs_organize'] = false;
 			$this->dirs['logs'] = 'logs/';
 		} else {
-			$this->dirs['logs_organise'] = true;
+			$this->dirs['logs_organize'] = true;
 			$this->dirs['logs'] = 'logs/'.date('Y').'/'.date('m').'/';
 		}
 		$this->test['dirs'] = $this->dirs;
@@ -165,29 +169,38 @@ class OpenTrack{
 		}
 	}
 	
-	public function dbSwitch($_db_name){
-		$active = mysql_select_db($_db_name, $this->db);
-		if(!$active){
-			$count = 0;
-			while(!$active){
-				$active = mysql_select_db($this->db_name, $this->db);
-				if($count >= 10){
-					$info = date('H:i:s')." - OpenTrack::dbSwitch() >> \r\n";
-					$info .= ">>\tCould not set database '".$this->db."' as the active database. Please ensure it exists and you have permission to access it.\r\n";
-					$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
-					$this->_log($info);
-					break;
-				}
-				$count++;
+	public function dbSwitch($_db_name = null, $_db_tabl = null){
+		if(!is_null($_db_tabl) && is_string($_db_tabl)){
+			$this->db_tabl = $_db_tabl;
+			if(is_null($_db_name)){
+				return true;
 			}
 		}
-		if($active){
-			$this->db_name = $_db_name;
-			$this->test['db_info']['database'] = $this->db_name;
-			return true;
-		} else {
-			return false;
+		if(!is_null($_db_name) && is_string($_db_name)){
+			$active = mysql_select_db($_db_name, $this->db);
+			if(!$active){
+				$count = 0;
+				while(!$active){
+					$active = mysql_select_db($this->db_name, $this->db);
+					if($count >= 10){
+						$info = date('H:i:s')." - OpenTrack::dbSwitch() >> \r\n";
+						$info .= ">>\tCould not set database '".$this->db."' as the active database. Please ensure it exists and you have permission to access it.\r\n";
+						$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
+						$this->_log($info);
+						break;
+					}
+					$count++;
+				}
+			}
+			if($active){
+				$this->db_name = $_db_name;
+				$this->test['db_info']['database'] = $this->db_name;
+				return true;
+			} else {
+				return false;
+			}
 		}
+		return false;
 	}
 	
 	private function _image(){
@@ -305,7 +318,7 @@ class OpenTrack{
 			$trace = $e->getTrace();
 			$info .= ">>\t".$trace[0]['file'].":".$trace[0]['line'];
 			$this->_log($info);
-			return;
+			return false;
 		}
 	}
 	
@@ -317,6 +330,7 @@ class OpenTrack{
 			$this->data['platform'] = $agent;
 			return $agent;
 		}
+		return false;
 	}
 	
 	private function _prepareTable(){
@@ -525,7 +539,7 @@ class OpenTrack{
 		if(!file_exists($this->dirs['logs'])){
 			mkdir($this->dirs['logs'], 0777, true);
 		}
-		$filename = ($this->dirs['logs_organise']) ? date('d') : date('Y-m-d');
+		$filename = ($this->dirs['logs_organize']) ? date('d') : date('Y-m-d');
 		$filename .= ($php) ? "_error" : "_log";
 		$log = fopen($this->dirs['logs'].$filename, 'a');
 		fwrite($log, $info."\r\n\r\n");
