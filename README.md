@@ -12,6 +12,7 @@ A barebones, stable non-class-based version is also available in the [V1.0 branc
 
 ##Working On##
 
+* Make `$_db_name` and `$_db_tabl` optional in dbSwitch() - add checks for both
 * Look into adding support for popular ORM ([Kohana](https://github.com/kohana/orm), [Doctrine](http://www.doctrine-project.org), [RedBean](http://redbeanphp.com/), etc)
 
 ##To Do##
