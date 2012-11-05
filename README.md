@@ -8,7 +8,9 @@ Designed to be used with messages sent via custom auto-mailing scripts.
 
 Stable and completely working non-class-based version available in the [V1.0 branch](https://github.com/Ultrabenosaurus/OpenTrack/tree/V1.0).
 
-Stable but not finished class-based version available in the [Master branch](https://github.com/Ultrabenosaurus/OpenTrack/) (your current location).
+Stable but not finished class-based version available in the [V1.4 branch](https://github.com/Ultrabenosaurus/OpenTrack/tree/V1.4) (your current location).
+
+Stable and mostly finished class-based version available in the [Master branch](https://github.com/Ultrabenosaurus/OpenTrack/) (your current location).
 
 Unstable version available in the [Dev branch](https://github.com/Ultrabenosaurus/OpenTrack/tree/dev).
 
