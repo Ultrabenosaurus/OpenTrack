@@ -16,7 +16,11 @@ A barebones, stable non-class-based version is also available in the [V1.0 branc
 
 ##To Do##
 
-Things to do in next dev version once the current version is stablised and moved to the Master branch.
+Things to do in this dev version.
 
 * Testing D:
 * Merge with Master branch
+
+Things to do in next dev version once the current version is stablised and moved to the Master branch.
+
+* Think of more improvements/additions
