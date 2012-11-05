@@ -1,7 +1,6 @@
 <?php
 
 class OpenTrack{
-	private $errors;
 	private $dirs;
 	private $debug;
 	private $device;
@@ -35,12 +34,16 @@ class OpenTrack{
 		$this->db_fiel = $_db_fiel;
 		$this->dirs['cache'] = $this->dirs['root'].$_cache_dir;
 		$this->data = array();
-		$this->test = array('dirs'=>$this->dirs);
+		$this->test = array(
+			'dirs'=>$this->dirs,
+			'errors'=>array(
+				'count'=>0
+			)
+		);
 	}
 	
 	public function __destruct(){
 		$this->dbDisconnect();
-		$this->errors = null;
 		$this->dirs = null;
 		$this->debug = null;
 		$this->device = null;
@@ -54,6 +57,32 @@ class OpenTrack{
 		$this->cache_dir = null;
 		$this->data = null;
 		$this->test = null;
+	}
+	
+	public function track(){
+		$params = $this->_getFromQueryString();
+		if($params){
+			$em_camp = explode(',', $params);
+			if($this->device){
+				$this->_getDeviceInfo();
+			}
+			$table_prep = $this->_prepareTable();
+			if($table_prep){
+				$this->_prepareData($em_camp[0], $em_camp[1]);
+				if($this->debug === false){
+					$this->_image();
+					return $this->_insertData();
+				} else {
+					return $this->test;
+				}
+			}
+		}
+		if($this->debug === false){
+			$this->_image();
+			return false;
+		} else {
+			return "Errors occurred. Please check <b>".$this->dirs['logs']."</b> for new log entires.";
+		}
 	}
 	
 	public function logsDirOrganise($organise = true){
@@ -158,32 +187,6 @@ class OpenTrack{
 			return true;
 		} else {
 			return false;
-		}
-	}
-	
-	public function track(){
-		$params = $this->_getFromQueryString();
-		if($params){
-			$em_camp = explode(',', $params);
-			if($this->device){
-				$this->_getDeviceInfo();
-			}
-			$table_prep = $this->_prepareTable();
-			if($table_prep){
-				$this->_prepareData($em_camp[0], $em_camp[1]);
-				if($this->debug === false){
-					$this->_image();
-					return $this->_insertData();
-				} else {
-					return $this->test;
-				}
-			}
-		}
-		if($this->debug === false){
-			$this->_image();
-			return false;
-		} else {
-			return "Errors occurred. Please check <b>".$this->dirs['logs']."</b> for new log entires.";
 		}
 	}
 	
@@ -302,7 +305,7 @@ class OpenTrack{
 			$trace = $e->getTrace();
 			$info .= ">>\t".$trace[0]['file'].":".$trace[0]['line'];
 			$this->_log($info);
-			continue;
+			return;
 		}
 	}
 	
@@ -527,8 +530,8 @@ class OpenTrack{
 		$log = fopen($this->dirs['logs'].$filename, 'a');
 		fwrite($log, $info."\r\n\r\n");
 		fclose($log);
-		$this->errors++;
-		$this->test['errors'] = $this->errors;
+		$this->test['errors']['count']++;
+		$this->test['errors'][] = "\r\n".$info;
 	}
 	
 	private function _handleErrors($errno, $errstr, $errfile, $errline, $errcontext){
