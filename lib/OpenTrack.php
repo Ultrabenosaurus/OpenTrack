@@ -115,6 +115,9 @@ class OpenTrack{
 				if($count >= 10){
 					$info = date('H:i:s')." - OpenTrack::dbConnect() >> \r\n";
 					$info .= ">>\tDatabase connection could not be established properly.\r\n";
+					$info .= ">>\tAddress: ".$this->db_addr."\r\n";
+					$info .= ">>\tUsername: ".$this->db_user."\r\n";
+					$info .= ">>\tPassword: ".$this->db_pass."\r\n";
 					$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
 					$this->_log($info);
 					break;
@@ -391,7 +394,7 @@ class OpenTrack{
 					);
 					if($count >= 10){
 						$info = date('H:i:s')." - OpenTrack::_createTable() >> \r\n";
-						$info .= ">>\tTable '' did not exist and could not be created. This is probably either a connection or permissions error.\r\n";
+						$info .= ">>\tTable '".$this->db_tabl."' did not exist and could not be created. This is probably either a connection or permissions error.\r\n";
 						$info .= ">>\tMySQL Error: ".mysql_errno($this->db).":".mysql_error($this->db);
 						$this->_log($info);
 						break;
