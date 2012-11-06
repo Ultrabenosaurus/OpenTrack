@@ -1,5 +1,6 @@
 logs/
 phpbc_cache/
+track-local.php
 
 #################
 ## Eclipse

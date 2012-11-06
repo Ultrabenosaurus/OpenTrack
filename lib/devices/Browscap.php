@@ -95,8 +95,10 @@ class Browscap
 	 * $updateMethod: The method to use to update the file, has to be a value of
 	 *                an UPDATE_* constant, null or false.
 	 */
-	public $remoteIniUrl = 'http://browsers.garykeith.com/stream.asp?BrowsCapINI';
-	public $remoteVerUrl = 'http://browsers.garykeith.com/versions/version-date.asp';
+	public $remoteIniUrl = 'http://tempdownloads.browserscap.com/stream.php?BrowsCapINI';
+	// public $remoteIniUrl = 'http://browsers.garykeith.com/stream.asp?BrowsCapINI';
+	public $remoteVerUrl = 'http://tempdownloads.browserscap.com/versions/version-date.php';
+	// public $remoteVerUrl = 'http://browsers.garykeith.com/versions/version-date.asp';
 	public $timeout = 5;
 	public $updateInterval = 432000;  // 5 days
 	public $errorInterval = 7200;  // 2 hours
@@ -109,7 +111,8 @@ class Browscap
 	 *
 	 * @var string
 	 */
-	public $localFile = 'lib/devices/php_browscap.ini';
+	public $localFile = null;
+	// public $localFile = 'lib/devices/php_browscap.ini';
 
 	/**
 	 * The useragent to include in the requests made by the class during the

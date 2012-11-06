@@ -1,6 +1,10 @@
 #WARNING#
 
-PHPBrowscap is currently set to use a local copy of `browscap.ini` as the project is down while ownership is transferred. I will be keeping an eye out for the project's revival and change back to PHPBrowscap's auto-update feature when it happens.
+PHPBrowscap is currently set to use temporary URIs for its auto-update feature due to the Browser Capabilities Project being in the process of changing ownership. It is highly likely these URIs will change soon, so I have left in the previous URIs and the local file pointer as comments (lines 98 to 115) so simply switch the commented lines as and when you need to depending on the state of the BCP and your needs.
+
+Once the project's ownership has stabilized and permanent URIs are released, I shall update `Browscap.php` appropriately and remove this warning.
+
+For more information on the change of ownership, please look here: https://groups.google.com/forum/#!topic/browscap/pk_dkkqdXzg
 
 #OpenTrack#
 
